@@ -3,6 +3,17 @@
 
 #define BOARD_SIZE 8
 
+#define OK_MOV 0
+#define OK_MOV_CHESS 1
+#define BAD_MOV_EMPTY_SRC 2
+#define BAD_MOV_FULL_DST 3
+#define BAD_MOV_CHESS 4
+#define BAD_MOV_BAD_INDEX 5
+#define BAD_MOV 6
+#define BAD_MOV_SAME 7
+#define OK_MOVE_CHECKMATE 8
+
+
 class Tool
 {
 protected:
@@ -31,7 +42,7 @@ public:
 	virtual const char getType() = 0;
 	virtual int canMove(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE]) = 0;
 	virtual int checkIfChess(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE]) = 0;
-	virtual int checkIfChessMat(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE]) = 0;
+	// TODO: virtual int checkIfChessMat(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE]) = 0;
 
 };
 

@@ -20,7 +20,7 @@ const int Point::getY() { return this->_y; }
 
 // operators
 
-Point Point::operator+(const Point& other) const
+const Point Point::operator+(const Point& other)
 {
 	return Point(this->_x + other._x, this->_y + other._y);
 }
