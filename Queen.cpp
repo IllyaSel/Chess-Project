@@ -17,7 +17,7 @@ int Queen::canMove(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE])
 	return OK_MOV;
 }
 
-char Queen::getType() const
+const char Queen::getType()
 {
 	if (this->_color)
 		return 'q';

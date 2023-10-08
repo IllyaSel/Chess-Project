@@ -17,7 +17,7 @@ public:
 
     // Functions
     int canMove(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE]);
-    char getType() const;
+    const char getType();
     int checkIfChess(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE]);
 };
 

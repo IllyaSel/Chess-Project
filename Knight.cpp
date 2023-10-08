@@ -14,7 +14,7 @@ int Knight::canMove(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE])
 	return OK_MOV;
 }
 
-char Knight::getType() const
+const char Knight::getType()
 {
 	if (this->_color)
 		return 'n';

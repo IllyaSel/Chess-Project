@@ -7,13 +7,14 @@
 class King :
     public Tool
 {
+public:
     // Constructor & Destructor
     King(bool color, Point place);
     ~King();
 
     //Functions
     int canMove(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE]);
-    char getType() const;
+    const char getType();
     int checkIfChess(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE]);
 };
 

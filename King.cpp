@@ -14,7 +14,7 @@ int King::canMove(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE])
     return OK_MOV;
 }
 
-char King::getType() const
+const char King::getType()
 {
     if (this->_color)
         return 'k';
