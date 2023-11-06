@@ -1,146 +1,198 @@
-// ChessGraphics.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+// arg_ - for func arguments, g - for global var, l - for local var
 
 #include <iostream>
 #include <vector>
 #include <SDL.h>
 #include <SDL_image.h>
 
+#include "Pipe.h"
+#include <thread>
+
 #undef main
 
+// GUI consts
 #define WINDOW_SIZE 800
 #define SQUARE_SIZE int(WINDOW_SIZE / 8)
 
+#define GRAY Color{127, 127, 127}
+#define LIGHT_GRAY Color{224, 224, 224}
+
+// GUI logic consts
 #define BOARD_SIZE 8
 #define START_BOARD "rnbkqbnrpppppppp################################PPPPPPPPRNBKQBNR"
 
-#define GRAY color{127, 127, 127}
-#define LIGHT_GRAY color{224, 224, 224}
+// Communication with logic consts
+#define OK_MOV "0"
+#define OK_MOV_CHESS "1"
+#define OK_MOV_CHECKMATE "8"
 
-typedef struct color {
+// Structures
+typedef struct Color {
     int r, g, b;
-} color;
+} Color;
 
-typedef struct piece_index {
+typedef struct PieceIndex {
     int row;
     int col;
-} piece_index;
+} PieceIndex;
 
-std::vector<SDL_Texture*> piece_textures;
-bool moving = false;
-piece_index src_square, dst_square;
+// Global variables
+std::vector<SDL_Texture*> gPieceTextures;
+bool gMoving = false;
+PieceIndex gSrcSquare, gDstSquare;
+
+// Graphics Server Pipe
+Pipe gPipe;
 
 
-void fill_char_board(char board[][BOARD_SIZE], std::string board_str)
+void FillCharBoard(char arg_board[][BOARD_SIZE], std::string arg_board_str)
 {
-    for (int i = 0; i < BOARD_SIZE; i++)
-    {
-        for (int j = 0; j < BOARD_SIZE; j++) {
-            board[i][j] = board_str[i * BOARD_SIZE + j];
-        }
+    for (int i = 0; i < BOARD_SIZE*BOARD_SIZE; i++){
+            arg_board[7 - i / BOARD_SIZE][i % BOARD_SIZE] = arg_board_str[i];
     }
 }
 
 
-SDL_Texture* LoadTexture(const std::string filepath, SDL_Renderer* renderer)
+SDL_Texture* LoadTexture(const std::string arg_filepath, SDL_Renderer* arg_renderer)
 {
-    SDL_Surface* surface = IMG_Load(filepath.c_str());
-    if (surface == NULL) { std::cout << "Error: function LoadTexture: surface: " << IMG_GetError() << " " << filepath << std::endl; }
+    SDL_Surface* lSurface = IMG_Load(arg_filepath.c_str());
+    if (lSurface == NULL) { 
+        std::cout << "Error: function LoadTexture: surface: " 
+        << IMG_GetError() << " " << arg_filepath << std::endl; 
+    }
 
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-    if (texture == NULL) { std::cout << "Error: function LoadTexture: texture: " << IMG_GetError() << std::endl; }
+    SDL_Texture* lTexture = SDL_CreateTextureFromSurface(arg_renderer, lSurface);
+    if (lTexture == NULL) { std::cout << "Error: function LoadTexture: texture: " << IMG_GetError() << std::endl; }
 
-    SDL_FreeSurface(surface);
-    piece_textures.push_back(texture); // saving texture pointer for future release of memory
+    SDL_FreeSurface(lSurface);
+    gPieceTextures.push_back(lTexture); // saving texture pointer for future release of memory
 
-    return texture;
+    return lTexture;
 }
 
 
 // Releasing textures taken memory
-void releaseTextures() { 
-    for (SDL_Texture* texture : piece_textures)
-        SDL_DestroyTexture(texture);
+void ReleaseTextures() { 
+    for (SDL_Texture* lTexture : gPieceTextures)
+        SDL_DestroyTexture(lTexture);
 
-    piece_textures.clear();
+    gPieceTextures.clear();
 }
 
 
-void renderChessboard(SDL_Renderer* renderer, char board[][BOARD_SIZE]) {
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set the background color to white
-    SDL_RenderClear(renderer);
+void RenderChessboard(SDL_Renderer* arg_renderer) 
+{
+    SDL_SetRenderDrawColor(arg_renderer, 255, 255, 255, 255); // Set the background color to white
+    SDL_RenderClear(arg_renderer);
 
-    bool isWhiteSquare = true;
-    char piece_name = ' ';
-    std::string icon_path = "";
+    bool lIsWhiteSquare = true;
+    SDL_Rect lSquareRect;
 
     for (int y = 0; y < BOARD_SIZE; y++) {
         for (int x = 0; x < BOARD_SIZE; x++) {
-            if (isWhiteSquare) {
-                SDL_SetRenderDrawColor(renderer, LIGHT_GRAY.r, LIGHT_GRAY.g, LIGHT_GRAY.b, 255); // White square
-            }
-            else {
-                SDL_SetRenderDrawColor(renderer, GRAY.r, GRAY.g, GRAY.b, 255); // Black square
-            }
+            if (lIsWhiteSquare)
+                SDL_SetRenderDrawColor(arg_renderer, LIGHT_GRAY.r, LIGHT_GRAY.g, LIGHT_GRAY.b, 255); // White square
+            else
+                SDL_SetRenderDrawColor(arg_renderer, GRAY.r, GRAY.g, GRAY.b, 255); // Black square
             
-            SDL_Rect squareRect = { x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE };
-            SDL_RenderFillRect(renderer, &squareRect);
-
-            piece_name = board[y][x];
-
-            if (piece_name != '#') {
-                if (islower(piece_name))
-                    icon_path = "icons\\w"; // White piece icons
-                else
-                    icon_path = "icons\\d"; // Dark piece icons
-
-                icon_path.push_back(piece_name);
-                icon_path += ".png";
-
-                SDL_Texture* pieceTexture = LoadTexture(icon_path, renderer); // Replace with actual file paths
-                SDL_RenderCopy(renderer, pieceTexture, NULL, &squareRect);
-            }
+            lSquareRect = { x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE };
+            SDL_RenderFillRect(arg_renderer, &lSquareRect);
             
-            isWhiteSquare = !isWhiteSquare;
-            icon_path.clear();
+            lIsWhiteSquare = !lIsWhiteSquare;
         }
-        isWhiteSquare = !isWhiteSquare;
+        lIsWhiteSquare = !lIsWhiteSquare;
     }
 }
 
 
-bool handleInput(char board[][BOARD_SIZE])
+void RenderPieces(SDL_Renderer* arg_renderer, char arg_board[][BOARD_SIZE])
 {
-    SDL_Event event;
+    char lPieceName = ' ';
+    std::string lIconPath = "";
+    SDL_Rect lSquareRect;
+    SDL_Texture* lPieceTexture;
 
-    while (SDL_PollEvent(&event))
+    for (int y = 0; y < BOARD_SIZE; y++)
     {
-        switch (event.type)
+        for (int x = 0; x < BOARD_SIZE; x++)
+        {
+            lSquareRect = { x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE };
+            lPieceName = arg_board[y][x];
+
+            if (lPieceName != '#') {
+                if (lPieceName == '@')
+                    lIconPath = "icons\\";
+                else if (islower(lPieceName))
+                    lIconPath = "icons\\w"; // White piece icons
+                else
+                    lIconPath = "icons\\d"; // Dark piece icons
+
+                lIconPath.push_back(lPieceName);
+                lIconPath += ".png";
+
+
+                lPieceTexture = LoadTexture(lIconPath, arg_renderer); // Replace with actual file paths
+                SDL_RenderCopy(arg_renderer, lPieceTexture, NULL, &lSquareRect);
+
+                lIconPath.clear();
+            }
+        }
+    }
+}
+
+
+bool HandleInput(char arg_board[][BOARD_SIZE])
+{
+    SDL_Event lEvent;
+    std::string lMsg;
+
+    while (SDL_PollEvent(&lEvent))
+    {
+        switch (lEvent.type)
         {
         case SDL_QUIT:
+            gPipe.setMessage("quit");
             return true;
         case SDL_MOUSEBUTTONDOWN:
-            if (event.button.button == SDL_BUTTON_LEFT)
+            if (lEvent.button.button == SDL_BUTTON_LEFT)
             {
-                int mouseX = event.button.x;
-                int mouseY = event.button.y;
+                int mouseX = lEvent.button.x;
+                int mouseY = lEvent.button.y;
 
 
-                if (!moving) {
-                    src_square = { int(mouseX / SQUARE_SIZE), int(mouseY / SQUARE_SIZE) };
-                    std::cout << "Source: " << board[src_square.col][src_square.row] << std::endl; // Debug needs
-                    moving = true;
+                if (!gMoving) {
+                    gSrcSquare = { int(mouseX / SQUARE_SIZE), int(mouseY / SQUARE_SIZE) };
+                    std::cout << "Source: " << arg_board[gSrcSquare.col][gSrcSquare.row] << std::endl; // Debug needs
+                    gMoving = true;
+
+                    //TODO: send pre-move msg
                 }
                 else {
-                    dst_square = { int(mouseX / SQUARE_SIZE), int(mouseY / SQUARE_SIZE) };
-                    std::cout << "Destination: " << board[dst_square.col][dst_square.row] << std::endl; // Debug needs
-                    board[dst_square.col][dst_square.row] = board[src_square.col][src_square.row];
-                    board[src_square.col][src_square.row] = '#';
+                    gDstSquare = { int(mouseX / SQUARE_SIZE), int(mouseY / SQUARE_SIZE) };
+                    std::cout << "Destination: " << arg_board[gDstSquare.col][gDstSquare.row] << std::endl; // Debug needs
 
-                    src_square = {};
-                    dst_square = {};
+                    //TODO: send move msg
+                    lMsg = std::string(1, char(7 - gSrcSquare.row + 'a')) +
+                                      std::string(1, char(7 - gSrcSquare.col + '1')) +
+                                      std::string(1, char(7 - gDstSquare.row + 'a')) +
+                                      std::string(1, char(7 - gDstSquare.col + '1'));
+
+                    gPipe.setMessage(lMsg);
+
+                    do { // waiting for logics message
+                        lMsg = gPipe.getMessage();
+                    } while (lMsg == "");
+
+                    if (lMsg == OK_MOV || lMsg == OK_MOV_CHESS || lMsg == OK_MOV_CHECKMATE)
+                    {
+                        arg_board[gDstSquare.col][gDstSquare.row] = arg_board[gSrcSquare.col][gSrcSquare.row];
+                        arg_board[gSrcSquare.col][gSrcSquare.row] = '#';
+                    }
+
+                    gSrcSquare = {};
+                    gDstSquare = {};
                     
-                    moving = false;
+                    gMoving = false;
                 }
             }
             break;
@@ -148,54 +200,59 @@ bool handleInput(char board[][BOARD_SIZE])
             break;
         }
     }
+
+    return false;
 }
 
 
 int main()
 {
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
-        // Handle SDL2 initialization error
+    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) { // Handle SDL2 initialization error
         return -1;
     }
 
-    if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) {
-        // Handle SDL2_image initialization error
+    if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) { // Handle SDL2_image initialization error
         return -1;
     }
 
-    SDL_Window* window = SDL_CreateWindow("Chess Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_SIZE, WINDOW_SIZE, SDL_WINDOW_SHOWN);
-    if (window == NULL) // Handle window creation error
+    std::thread lPipeThread(&Pipe::serve, &gPipe);
+
+    SDL_Window* lWindow = SDL_CreateWindow("Chess Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_SIZE, WINDOW_SIZE, SDL_WINDOW_SHOWN);
+    if (lWindow == NULL) // Handle window creation error
         return -1;
 
-    SDL_Surface* window_icon = IMG_Load("icons\\dQ.png");
-    SDL_SetWindowIcon(window, window_icon);
+    SDL_Surface* lWindowIcon = IMG_Load("icons\\dQ.png");
+    SDL_SetWindowIcon(lWindow, lWindowIcon);
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (renderer == NULL) // Handle renderer creation error
+    SDL_Renderer* lRenderer = SDL_CreateRenderer(lWindow, -1, SDL_RENDERER_ACCELERATED);
+    if (lRenderer == NULL) // Handle renderer creation error
         return -1;
 
     // Main game loop 
-    bool quit = false;
-    char board[BOARD_SIZE][BOARD_SIZE] = {};
-    fill_char_board(board, START_BOARD);
+    bool lQuit = false;
+    char lBoard[BOARD_SIZE][BOARD_SIZE] = {};
+    FillCharBoard(lBoard, START_BOARD);
 
-    while (!quit) {
+    while (!lQuit) {
         // Handle user input
-        quit = handleInput(board);
+        lQuit = HandleInput(lBoard);
                 
         // Render the chessboard and pieces
-        renderChessboard(renderer, board);
+        RenderChessboard(lRenderer);
+        RenderPieces(lRenderer, lBoard);
 
         // Update the screen
-        SDL_RenderPresent(renderer);
-        releaseTextures();
+        SDL_RenderPresent(lRenderer);
+        ReleaseTextures();
     }
 
     // Clean up and quit SDL
-    SDL_FreeSurface(window_icon);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    SDL_FreeSurface(lWindowIcon);
+    SDL_DestroyRenderer(lRenderer);
+    SDL_DestroyWindow(lWindow);
     SDL_Quit();
+
+    lPipeThread.join();
 
     return 0;
 }
