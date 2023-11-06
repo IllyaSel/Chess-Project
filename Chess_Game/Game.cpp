@@ -1,9 +1,9 @@
 #include "Game.h"
 
-Game::Game(bool whiteTurn, Board board)
+Game::Game(bool arg_whiteTurn, Board arg_board)
 {
 	this->_board = Board();
-	this->_whiteTurn = whiteTurn;
+	this->_whiteTurn = arg_whiteTurn;
 }
 
 Game::Game(Game& other)
@@ -25,20 +25,20 @@ const bool Game::getTurn() { return this->_whiteTurn; }
 
 const Board& Game::getBoard() { return this->_board; }
 
-int Game::move(Point src, Point dst)
+int Game::move(Point arg_src, Point arg_dst)
 {
-	this->_board.SetMyPlace(src);
+	this->_board.SetMyPlace(arg_src);
 	
-	switch (this->_board.canMove(dst))
+	switch (this->_board.canMove(arg_dst))
 	{
 	case OK_MOV:
-		this->_board.SetMove(dst);
+		this->_board.SetMove(arg_dst);
 		return OK_MOV;
 	case OK_MOV_CHESS:
-		this->_board.SetMove(dst);
+		this->_board.SetMove(arg_dst);
 		return OK_MOV_CHESS;
 	default:
-		return this->_board.canMove(dst);
+		return this->_board.canMove(arg_dst);
 	}
 }
 

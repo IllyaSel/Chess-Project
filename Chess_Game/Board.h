@@ -1,6 +1,6 @@
 #pragma once
 #include <iostream>
-#include <string.h>
+#include <string>
 
 #include "Point.h"
 #include "Tool.h"

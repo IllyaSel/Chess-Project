@@ -1,6 +1,6 @@
 #include "Bishop.h"
 
-Bishop::Bishop(bool color, Point place) : Tool(color, place)
+Bishop::Bishop(bool arg_color, Point arg_place) : Tool(arg_color, arg_place)
 {
 }
 
@@ -10,19 +10,19 @@ Bishop::~Bishop()
 
 int Bishop::canMove(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE])
 {
-	int x, y;
+	int lx, ly;
 
 	if (ILEGALL_BISHOP) return BAD_MOV;
 
-	for (x = this->_place.getX(), y = this->_place.getY(); toMove.getY() != y;)
+	for (lx = this->_place.getX(), ly = this->_place.getY(); toMove.getY() != ly;)
 	{
-		if (this->_place.getX() - toMove.getX() < 0) x++;
-		else x--;
+		if (this->_place.getX() - toMove.getX() < 0) lx++;
+		else lx--;
 
-		if (this->_place.getY() - toMove.getY() < 0) y++;
-		else y--;
+		if (this->_place.getY() - toMove.getY() < 0) ly++;
+		else ly--;
 
-		if ((board[y][x] != nullptr && toMove.getY() != y) || (board[y][x] != nullptr && board[y][x]->getColor() == this->_color)) return BAD_MOV;
+		if ((board[ly][lx] != nullptr && toMove.getY() != ly) || (board[ly][lx] != nullptr && board[ly][lx]->getColor() == this->_color)) return BAD_MOV;
 	}
 
 	return OK_MOV;
