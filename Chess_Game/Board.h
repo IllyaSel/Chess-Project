@@ -12,7 +12,7 @@
 #include "Queen.h"
 #include "King.h"
 
-#define START_BOARD "rnbkqbnrpppppppp################################PPPPPPPPRNBKQBNR1"
+#define START_BOARD "rnbqkbnrpppppppp################################PPPPPPPPRNBQKBNR1"
 #define WHITE 1
 #define BLACK 0
 

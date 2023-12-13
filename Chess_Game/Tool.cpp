@@ -1,6 +1,6 @@
 #include "Tool.h"
 
-Point Tool::_kingsLoc[2];
+Point Tool::_kingsLoc[2] = { Point(4, 0), Point(4, 7) };
 
 
 Tool::Tool()

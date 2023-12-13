@@ -15,12 +15,14 @@ int Pawn::canMove(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE])
         if (this->_place.getX() == toMove.getX()) {
             if (this->_color) {
                 if (toMove.getY() == this->_place.getY() - 1) {
+                    this->_ifMove = true;
                     return OK_MOV;
                 }
                 else if (toMove.getY() == this->_place.getY() - 2 && !this->_ifMove) { this->_ifMove = true; return OK_MOV; } // move two squares forward as the first move
             }
             else {
                 if (toMove.getY() == this->_place.getY() + 1) {
+                    this->_ifMove = true;
                     return OK_MOV;
                 }
                 else if (toMove.getY() == this->_place.getY() + 2 && !this->_ifMove) { this->_ifMove = true; return OK_MOV; } // move two squares forward as the first move
@@ -32,11 +34,13 @@ int Pawn::canMove(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE])
         if (((this->_place.getX() == toMove.getX() + 1) || (this->_place.getX() == toMove.getX() - 1))) {
             if (this->_color) {
                 if (toMove.getY() == this->_place.getY() - 1) {
+                    this->_ifMove = true;
                     return OK_MOV;
                 }
             }
             else {
                 if (toMove.getY() == this->_place.getY() + 1) {
+                    this->_ifMove = true;
                     return OK_MOV;
                 }
             }
@@ -55,7 +59,12 @@ const char Pawn::getType()
 
 int Pawn::checkIfChess(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE])
 {
-    if (canMove(toMove, board) == 1)
-        return 1;
-    return 0;
+    Pawn VirtualPawn(this->_color, toMove);
+    if (canMove(toMove, board) == OK_MOV &&
+        VirtualPawn.canMove(this->_kingsLoc[!bool(this->_color)], board)) // checks if the move will risk hostile king
+    {
+        return OK_MOV_CHESS;
+    }
+
+    return BAD_MOV_CHESS;
 }

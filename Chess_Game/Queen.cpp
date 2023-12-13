@@ -26,7 +26,12 @@ const char Queen::getType()
 
 int Queen::checkIfChess(Point toMove, Tool* board[BOARD_SIZE][BOARD_SIZE])
 {
-	if (canMove(toMove, board) == 1)
-		return 1;
-	return 0;
+	Queen VirtualQueen(this->_color, toMove);
+	if (canMove(toMove, board) == OK_MOV &&
+		VirtualQueen.canMove(this->_kingsLoc[!bool(this->_color)], board)) // checks if the move will risk hostile king
+	{
+		return OK_MOV_CHESS;
+	}
+
+	return BAD_MOV_CHESS;
 }

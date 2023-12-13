@@ -67,8 +67,9 @@ int Board::canMove(Point point)
 	else if (this->_board[this->_myPlace.getY()][this->_myPlace.getX()] != nullptr &&
 			 this->_board[point.getY()][point.getX()] != nullptr) 
 	{
-		if (this->_board[this->_myPlace.getY()][this->_myPlace.getX()]->getColor() ==
-			this->_board[point.getY()][point.getX()]->getColor()) 
+		if ((this->_board[this->_myPlace.getY()][this->_myPlace.getX()]->getColor() ==
+			this->_board[point.getY()][point.getX()]->getColor()) ||
+			point == this->_myPlace)
 		{
 			return BAD_MOV_FULL_DST;
 		}
@@ -77,14 +78,15 @@ int Board::canMove(Point point)
 	int lCanMove = this->_board[this->_myPlace.getY()][this->_myPlace.getX()]->canMove(point, this->_board);
 	int lChess = this->_board[this->_myPlace.getY()][this->_myPlace.getX()]->checkIfChess(point, this->_board);
 
-	if (lChess == OK_MOV_CHESS) 
-	{
-		return OK_MOV_CHESS; 
-	}
-	else if (lCanMove == BAD_MOV ||
+	
+	if (lCanMove == BAD_MOV ||
 		this->_board[this->_myPlace.getY()][this->_myPlace.getX()]->getColor() != this->_colorTurn) // checks if the turn is of current piece's color
 	{
 		return BAD_MOV; 
+	}
+	else if (lChess == OK_MOV_CHESS)
+	{
+		return OK_MOV_CHESS;
 	}
 
 	return OK_MOV;
@@ -113,20 +115,22 @@ void Board::SetMyPlace(Point myPlace) { this->_myPlace = myPlace; }
 // Functions that returns all the possible piece's moves
 const std::string Board::getPossibleMoves(Point arg_myPlace)
 {
-	std::string lMoves = "";
+	std::string lMoves = " ";
 	bool lIfMove;
 	int lCode;
+
+	this->_myPlace = arg_myPlace;
 
 	for (int i = 0; i < BOARD_SIZE; i++)
 	{
 		for (int j = 0; j < BOARD_SIZE; j++)
 		{
 			lIfMove = this->_board[arg_myPlace.getY()][arg_myPlace.getX()]->_ifMove; // save the initial ifMove condition
-			lCode = this->_board[arg_myPlace.getY()][arg_myPlace.getX()]->canMove(Point(i, j), this->_board);
+			lCode = canMove(Point(i, j));
 			this->_board[arg_myPlace.getY()][arg_myPlace.getX()]->_ifMove = lIfMove; // returns initial ifMove
 
 			if (lCode == OK_MOV || lCode == OK_MOV_CHESS)
-				lMoves.append(std::string{ char(7 - i + 'a'), char(7 - j + '1')});
+				lMoves.append(std::string{ char(i + 'a'), char(7 - j + '1')});
 		}
 	}
 

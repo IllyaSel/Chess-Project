@@ -36,6 +36,7 @@ int Game::move(Point arg_src, Point arg_dst)
 		return OK_MOV;
 	case OK_MOV_CHESS:
 		this->_board.SetMove(arg_dst);
+		std::cout << "CHESS\n";
 		return OK_MOV_CHESS;
 	default:
 		return this->_board.canMove(arg_dst);
