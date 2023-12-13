@@ -14,6 +14,7 @@ int main()
     try
     {
         system("start ChessGraphics.exe");
+        Sleep(1000); // waiting for GUI Pipe start
 
         bool lConnected = lPipe.connect();
 
@@ -35,16 +36,16 @@ int main()
 
         while (lGraphicsMsg != "quit") {
             
-            lSrc = Point(7 - (lGraphicsMsg[0] - 'a'), 7 - (lGraphicsMsg[1] - '1'));
+            lSrc = Point((lGraphicsMsg[0] - 'a'), 7 - (lGraphicsMsg[1] - '1'));
 
-            if (!isalpha(lGraphicsMsg[2]))  // check if msg is pre-move
+            if ((lGraphicsMsg[2]) == ':')  // check if msg is pre-move
             {
                 lBoard = lGame.getBoard();
                 lResponseMsg = lBoard.getPossibleMoves(lSrc);
             }
             else // msg is move
             { 
-                lDst = Point(7 - (lGraphicsMsg[2] - 'a'), 7 - (lGraphicsMsg[3] - '1'));
+                lDst = Point((lGraphicsMsg[2] - 'a'), 7 - (lGraphicsMsg[3] - '1'));
 
                 lCode = lGame.move(lSrc, lDst);
                 lResponseMsg = std::to_string(lCode);
